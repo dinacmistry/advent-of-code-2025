@@ -27,7 +27,7 @@ def get_password_0x434C49434B(instructions, starting_point):
         else:
             y = y + int(step)
 
-        print("new", n, i, y, old_y)
+        print("new", n + 1, i, y, old_y)
         range_min = min(y, old_y)
         range_max = max(y, old_y)
         clicks_at_x = [x for x in range(range_min, range_max) if x % 100 == 0]
@@ -35,7 +35,7 @@ def get_password_0x434C49434B(instructions, starting_point):
         number_of_clicks_per_step = len(clicks_at_x)
 
         y = y % 100
-        print("final", n, i, y, old_y, range_min, range_max, clicks_at_x)
+        print("final", n + 1, i, y, old_y, range_min, range_max, clicks_at_x)
 
         if y == 0:
             count_of_zeros += 1
@@ -44,6 +44,37 @@ def get_password_0x434C49434B(instructions, starting_point):
             count_of_zeros += number_of_clicks_per_step
             print("adding", number_of_clicks_per_step, count_of_zeros)
 
+    return y, count_of_zeros
+
+def get_new_password(instructions, starting_point):
+    y = starting_point
+    count_of_zeros = 0
+
+    for n, i in enumerate(instructions):
+        print()
+        direction = i[0]
+        step = i[1:]
+        old_y = y
+        if direction == "L":
+            y = y - int(step)
+        else:
+            y = y + int(step)
+
+        range_min = min(y, old_y)
+        range_max = max(y, old_y)
+        # find the nearest multiple of 100 above the minimum value
+        closest_multiple_100 = -(-range_min // 100) * 100
+        clicks_at_x = [x for x in range(closest_multiple_100, range_max + 1, 100)]
+        number_of_clicks_per_step = len(clicks_at_x)
+
+        if y != old_y:
+            if old_y % 100 == 0:
+                print('yes')
+                count_of_zeros += (number_of_clicks_per_step - 1)
+            else:
+                count_of_zeros += number_of_clicks_per_step 
+
+        y = y % 100
     return y, count_of_zeros
 
 
@@ -66,11 +97,14 @@ if __name__ == '__main__':
     ]
 
 
-expected_y = 32
-expected_password = 6
+    expected_y = 32
+    expected_password = 6
 
-test_y, test_password = get_password_0x434C49434B(test_instructions, starting_point)
-print(test_y, test_password)
+    test_y, test_password = get_password_0x434C49434B(test_instructions, starting_point)
+    print(test_y, test_password)
+
+    test_y, test_password = get_new_password(test_instructions, starting_point)
+    print(test_y, test_password)
 
 
 
