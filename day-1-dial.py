@@ -53,7 +53,6 @@ if __name__ == '__main__':
     expected_y = 32
     expected_password = 3
     test_y, test_password = get_password(test_instructions, starting_point)
-    # print(test_y, test_password)
 
     assert test_y == expected_y, "dial point wrong"
     assert test_password == expected_password, "password wrong"
@@ -64,9 +63,6 @@ if __name__ == '__main__':
 
     filename = "day-1-dial-input.txt" # actual instructions
     instructions = parse_input(filename)
-
-    # print(instructions)
-    # print(len(instructions))
 
     y, password = get_password(instructions, starting_point)
     print(f"y: {y}, password: {password}")
