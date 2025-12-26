@@ -1,4 +1,4 @@
-"Day 2"
+"Day 2: Invalid IDs part 1"
 
 
 def parse_inputs(input_string):
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     text_input += "446443-446449,"
     text_input += "38593856-38593862,"
 
-    ranges = parse_inputs(text_input)
+    # ranges = parse_inputs(text_input)
 
     invalid_ids = []
     invalid_ids = get_invalid_ids_from_input(text_input, invalid_ids)
@@ -77,8 +77,7 @@ if __name__ == '__main__':
     filename = "day-2-input.txt"
     with open(filename, 'r') as f:
         contents = f.read()
-    # ranges = parse_inputs(f)
-    # f.close()
+    f.close()
 
     invalid_ids = []
     invalid_ids = get_invalid_ids_from_input(contents, invalid_ids)
