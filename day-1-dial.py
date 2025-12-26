@@ -1,7 +1,6 @@
 "Day 1: Dial"
 
 
-
 def parse_input(filename):
     with open(filename, 'r') as f:
         contents = f.read()
@@ -13,22 +12,10 @@ def parse_input(filename):
     return contents
 
 
-filename = "day-1-dial-input.txt"
-contents = parse_input(filename)
-# for line in contents:
-#     print(line)
-print(contents)
-print(len(contents))
-
-
-# lines = contents.split("\n")
-# print(lines)
-# print(len(lines))
-
 def get_password(instructions, starting_point):
     y = starting_point
     count_of_zeros = 0
-    for i in instructions:
+    for n, i in enumerate(instructions):
         direction = i[0]
         step = i[1:]
         if direction == "L":
@@ -49,6 +36,7 @@ if __name__ == '__main__':
 
     starting_point = 50
 
+    # testing against easy case
     test_instructions = [
     "L68", 
     "L30",
@@ -65,8 +53,22 @@ if __name__ == '__main__':
     expected_y = 32
     expected_password = 3
     test_y, test_password = get_password(test_instructions, starting_point)
-    print(test_y, test_password)
+    # print(test_y, test_password)
 
     assert test_y == expected_y, "dial point wrong"
     assert test_password == expected_password, "password wrong"
+
+
+    # actual use case
+    starting_point = 50
+
+    filename = "day-1-dial-input.txt" # actual instructions
+    instructions = parse_input(filename)
+
+    # print(instructions)
+    # print(len(instructions))
+
+    y, password = get_password(instructions, starting_point)
+    print(f"y: {y}, password: {password}")
+
 
