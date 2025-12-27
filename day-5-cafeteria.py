@@ -55,6 +55,38 @@ def get_all_fresh_and_available_ingredients(ingredient_ranges, available_ingredi
     return all_fresh_and_available
 
 
+def how_many_fresh_ingredients(ingredient_ranges):
+
+    merged_ranges = []
+
+    sorted_ranges = []
+    for r in range(len(ingredient_ranges)):
+        start, stop = ingredient_ranges[r]
+        stop += 1
+        sorted_ranges.append((start, stop))
+
+    sorted_ranges.sort()
+
+    i = 0
+    while i < len(sorted_ranges):
+        ri = sorted_ranges[i]
+        j = i + 1
+        while j < len(sorted_ranges):
+            rj = sorted_ranges[j]
+            if rj[0] < ri[1]:
+                ri = (ri[0], max(ri[1], rj[1]))
+                sorted_ranges[i] = ri
+                del sorted_ranges[j]
+            else:
+                break
+        i += 1
+
+    count_of_each_range = [r[1] - r[0] for r in sorted_ranges]
+    return sum(count_of_each_range)
+
+
+
+
 if __name__ == '__main__':
     
     ingredient_ranges_text = ""
@@ -62,7 +94,6 @@ if __name__ == '__main__':
     ingredient_ranges_text += "10-14\n"
     ingredient_ranges_text += "16-20\n"
     ingredient_ranges_text += "12-18\n"
-
 
     available_text = ""
     available_text += "1\n"
@@ -86,6 +117,16 @@ if __name__ == '__main__':
 
     print(len(all_fresh_and_available))
 
+    expected = 3
+    assert len(all_fresh_and_available) == expected, "wrong number"
+
+
+    ingredient_ranges = parse_ingredient_ranges(ingredient_ranges_text)
+    test_all_fresh_count = how_many_fresh_ingredients(ingredient_ranges)
+
+    expected_fresh_count = 14
+    assert test_all_fresh_count == expected_fresh_count, "wrong count"
+
 
 
 
@@ -98,11 +139,15 @@ if __name__ == '__main__':
     ingredient_ranges = np.array(ingredient_ranges)
     available_ingredients = parse_available_ingredients(contents)
 
-    print(len(ingredient_ranges))
 
     all_fresh_and_available = get_all_fresh_and_available_ingredients(ingredient_ranges, available_ingredients)
 
     print("actual number of fresh and available ingredients", len(all_fresh_and_available))
+
+    # number of fresh ingredients in actual inventory
+    all_fresh_count = how_many_fresh_ingredients(ingredient_ranges)
+    print(f"There are {all_fresh_count} fresh ingredients")
+
 
 
 
