@@ -78,7 +78,8 @@ def get_number_of_adjacent_rolls(i, j, nrows, ncols, matrix):
     number_of_adjacent_rolls = 0
     for adj in valid_adjacent_spots:
         adj_i, adj_j = adj
-        number_of_adjacent_rolls += matrix[adj_i, adj_j]
+        if matrix[adj_i, adj_j] > 0:
+            number_of_adjacent_rolls += matrix[adj_i, adj_j]
 
     return int(number_of_adjacent_rolls)
 
@@ -97,9 +98,28 @@ def get_targeted_rolls(matrix, threshold):
     targeted_rolls = new_matrix < 0
     number_of_targeted_rolls = np.sum(targeted_rolls)
 
-    return number_of_targeted_rolls
+    return new_matrix, number_of_targeted_rolls
 
 
+def recursive_remove_rolls(matrix, threshold):
+
+    nrows, ncols = matrix.shape
+    number_of_targeted_rolls = 0
+
+    # remove first round
+    new_matrix, number_of_targeted_rolls = get_targeted_rolls(matrix, threshold)
+    old_matrix = copy.deepcopy(matrix)
+
+    while not np.array_equal(new_matrix, old_matrix):
+        old_matrix = copy.deepcopy(new_matrix)
+        new_matrix, number_of_targeted_rolls = get_targeted_rolls(new_matrix, threshold)
+
+    return new_matrix
+
+
+def get_number_of_removed_rolls(matrix):
+    removed_rolls = matrix < 0
+    return np.sum(removed_rolls)
 
 
 if __name__ == '__main__':
@@ -123,11 +143,14 @@ if __name__ == '__main__':
     nrows, ncols = matrix.shape
     threshold = 4
 
-    number_of_targeted_rolls = get_targeted_rolls(matrix, threshold)
-    print(number_of_targeted_rolls)
+    new_matrix, number_of_targeted_rolls = get_targeted_rolls(matrix, threshold)
     expected_sum = 13
 
     assert number_of_targeted_rolls == expected_sum, "Wrong sum"
+
+    new_matrix = recursive_remove_rolls(matrix, threshold)
+    removed_rolls = get_number_of_removed_rolls(new_matrix)
+    print('recursive_remove_rolls on test',removed_rolls)
 
 
     # actual rolls
@@ -142,13 +165,13 @@ if __name__ == '__main__':
 
     threshold = 4
 
-    number_of_targeted_rolls = get_targeted_rolls(matrix, threshold)
-    print(number_of_targeted_rolls)
+    new_matrix, number_of_targeted_rolls = get_targeted_rolls(matrix, threshold)
+    print('first round removal',number_of_targeted_rolls)
 
 
-
-
-
+    new_matrix = recursive_remove_rolls(matrix, threshold)
+    removed_rolls = get_number_of_removed_rolls(new_matrix)
+    print('recursive_remove_rolls on input',removed_rolls)
 
 
 
