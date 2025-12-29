@@ -7,7 +7,6 @@ def parse_manifold(text):
     split_string = text.split('\n')
 
     for i in split_string:
-        # manifold.append(list(i))
         if len(i) > 0:
             manifold.append(i)
 
@@ -15,12 +14,52 @@ def parse_manifold(text):
 
 
 def split_beams(manifold):
-    # pass
 
     # find where the beam starts
     first_array = manifold[0]
     beam_spot = first_array.index("S")
-    print(first_array[beam_spot])
+    analyzed_manifold = manifold
+
+    # propagate the beam to the next
+    next_index = 1
+    line = list(manifold[next_index])
+    if line[beam_spot] == ".":
+        line[beam_spot] = "|"
+    line = "".join(line)
+    analyzed_manifold[next_index] = line
+
+
+    for n in range(1, len(analyzed_manifold) - 1):
+
+        beam_spots = []
+        splitter_spots = []
+        for i in range(len(analyzed_manifold[n])):
+            if analyzed_manifold[n][i] == "|":
+                beam_spots.append(i)
+            if analyzed_manifold[n + 1][i] == "^":
+                splitter_spots.append(i)
+
+        next_beam_spots = []
+        for i in beam_spots:
+            if i in splitter_spots:
+                if (i - 1 >= 0) and analyzed_manifold[n+1][i - 1] == ".":
+                    next_beam_spots.append(i - 1)
+                if (i + 1 < len(analyzed_manifold[n + 1])) and analyzed_manifold[n+1][i+1] == ".":
+                    next_beam_spots.append(i + 1)
+            else:
+                if analyzed_manifold[n+1][i] == ".":
+                    next_beam_spots.append(i)
+
+        next_beam_spots = set(next_beam_spots)
+        next_beam_spots = sorted(next_beam_spots)
+
+        next_line = list(analyzed_manifold[n + 1])
+        for i in next_beam_spots:
+            next_line[i] = "|"
+        next_line = "".join(next_line)
+        analyzed_manifold[n+1] = next_line
+
+    return analyzed_manifold
 
 
 def analyze_manifold(manifold):
@@ -75,13 +114,27 @@ if __name__ == '__main__':
     text += "|^|^|^|^|^|||^|\n"
     text += "|.|.|.|.|.|||.|\n"
 
-    manifold = parse_manifold(text)
+
+    filename = "day-7-small-manifold.txt"
+    pre_split_text = parse_manifold(filename)
+    with open(filename, 'r') as f:
+        contents = f.read()
+    f.close()
+
+    manifold = parse_manifold(contents)
+    split_beams_manifold = split_beams(manifold)
+    split_beams_manifold_test = parse_manifold(text)
+
+    assert split_beams_manifold == split_beams_manifold_test, "wrong split manifold"
+
     expected = 21
-    test_answer = analyze_manifold(manifold)
+    test_answer = analyze_manifold(split_beams_manifold_test)
+
 
     assert test_answer == expected, "wrong number of split beams"
     print("Number of split beams in test", test_answer)
 
+    assert analyze_manifold(split_beams_manifold) == expected, "wrong split manifolds"
 
     filename = "day-7-manifold.txt"
     with open(filename, 'r') as f:
@@ -89,14 +142,9 @@ if __name__ == '__main__':
     f.close()
 
     manifold = parse_manifold(contents)
-    # print(manifold)
-
-    for a in manifold:
-        print(a)
-    # count_of_split_beams = analyze_manifold(manifold)
-    # print("Number of split beams", count_of_split_beams)
-
-    split_beams(manifold)
+    split_beams_manifold = split_beams(manifold)
+    count_of_split_beams = analyze_manifold(split_beams_manifold)
+    print("count of split beams", count_of_split_beams)
 
 
 
