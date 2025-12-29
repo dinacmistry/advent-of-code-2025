@@ -1,5 +1,5 @@
 "Day 7: Tachyons"
-
+import copy
 
 def parse_manifold(text):
 
@@ -18,7 +18,7 @@ def split_beams(manifold):
     # find where the beam starts
     first_array = manifold[0]
     beam_spot = first_array.index("S")
-    analyzed_manifold = manifold
+    analyzed_manifold = copy.deepcopy(manifold)
 
     # propagate the beam to the next
     next_index = 1
@@ -61,6 +61,57 @@ def split_beams(manifold):
 
     return analyzed_manifold
 
+def quantum_tachyon_timelines(manifold):
+    split_manifold = copy.deepcopy(manifold)
+
+    beam_spot = split_manifold[0].index("S")
+    next_index = 1
+    next_line = list(split_manifold[next_index])
+    for i in [beam_spot]:
+        if next_line[i] == ".":
+            next_line[i] = 1
+    split_manifold[next_index] = next_line
+
+
+    for n in range(1, len(split_manifold) - 1):
+        beam_spots = []
+        splitter_spots = []
+        for i in range(len(split_manifold[n])):
+            if isinstance(split_manifold[n][i], int):
+                beam_spots.append(i)
+            if split_manifold[n + 1][i] == "^":
+                splitter_spots.append(i)
+
+
+        next_line = list(split_manifold[n + 1])
+        for i in beam_spots:
+            if i in splitter_spots:
+                if (i - 1 >= 0):
+                    if next_line[i - 1] == ".":
+                        next_line[i - 1] = split_manifold[n][i]
+                    elif isinstance(next_line[i-1], int):
+                        next_line[i - 1] += split_manifold[n][i]
+                    elif next_line[i - 1] == "^":
+                        pass
+                if (i + 1 < len(split_manifold[n + 1])):
+                    if next_line[i + 1] == ".":
+                        next_line[i + 1] = split_manifold[n][i]
+                    elif next_line[i + 1] == "^":
+                        pass
+                    elif isinstance(next_line[i + 1], int):
+                        next_line[i + 1] += split_manifold[n][i]
+            elif i not in splitter_spots:
+                if next_line[i] == ".":
+                    next_line[i] = split_manifold[n][i]
+                elif isinstance(next_line[i], int):
+                    next_line[i] += split_manifold[n][i]
+        split_manifold[n + 1] = next_line
+
+    count_of_timelines = sum([i for i in split_manifold[-1] if isinstance(i, int)])
+    return count_of_timelines
+
+
+
 
 def analyze_manifold(manifold):
 
@@ -91,6 +142,8 @@ def analyze_manifold(manifold):
                 if manifold[n-1][index] == "|":
                     count_of_split_beams += 1
     return count_of_split_beams
+
+
 
 
 
@@ -130,11 +183,18 @@ if __name__ == '__main__':
     expected = 21
     test_answer = analyze_manifold(split_beams_manifold_test)
 
-
     assert test_answer == expected, "wrong number of split beams"
     print("Number of split beams in test", test_answer)
 
     assert analyze_manifold(split_beams_manifold) == expected, "wrong split manifolds"
+
+
+    count_of_timelines = quantum_tachyon_timelines(manifold)
+    expected_timelines = 40
+
+    assert count_of_timelines == expected_timelines, f"wrong count of timelines {count_of_timelines}"
+
+
 
     filename = "day-7-manifold.txt"
     with open(filename, 'r') as f:
@@ -145,6 +205,9 @@ if __name__ == '__main__':
     split_beams_manifold = split_beams(manifold)
     count_of_split_beams = analyze_manifold(split_beams_manifold)
     print("count of split beams", count_of_split_beams)
+
+    count_of_timelines = quantum_tachyon_timelines(manifold)
+    print("count of timelines", count_of_timelines)
 
 
 
