@@ -130,6 +130,20 @@ def get_boundaries_of_polygon(tile_positions):
     return polygon_lines
 
 
+def get_polygon_lines_compressed(tile_positions):
+    polygon_lines = []
+    for i in range(len(tile_positions)):
+        j = (i+1) % len(tile_positions)
+
+        yi, xi = tile_positions[i]
+        yj, xj = tile_positions[j]
+        # polygon_lines.append([xi, xj, yi, yj])
+        polygon_lines.append([yi, xi, yj, xj])
+        # polygon_lines.append()
+    return polygon_lines
+
+
+
 def define_rectangle(corner1, corner2):
 
     y1, x1 = corner1
@@ -144,18 +158,36 @@ def define_rectangle(corner1, corner2):
 def get_line_at_x(slope, intercept, x):
     return slope * x + intercept
 
-def get_point(slope, intercept, x):
-    y = get_line_at_x(slope, intercept, x)
+
+# def get_point(slope, intercept, x):
+    # y = get_line_at_x(slope, intercept, x)
+def get_point(point):
+    y, x = point
     if np.abs(y - int(y)) == 0:
         y = int(y)
+    if np.abs(x - int(x)) == 0:
+        x = int(x)
     point = [y, x]
     return point
 
-def check_if_lines_cross(line1, line2, x_range_min, x_range_max):
+def check_if_lines_cross(line1, line2):
     # x1, x2, slope1, intercept1 = line1
     # x3, x4, slope2, intercept2 = line2
-    x1, x2, y1, y2 = line1
-    x3, x4, y3, y4 = line2
+    # x1, x2, y1, y2 = line1
+    # x3, x4, y3, y4 = line2
+    # x1, y1, x2, y2 = line1
+    # y1, x1, y2, x2 = line1
+    # y3, x3, y4, x4 = line2
+    y2, x2, y1, x1 = line1
+    y4, x4, y3, x3 = line2
+    print("line1", line1)
+    print("line2", line2)
+
+    x_range_min = min(x3, x4)
+    x_range_max = max(x3, x4)
+    if x1 == x2:
+        x_range_min = x1
+        x_range_max = x2
     # y1 = get_line_at_x(slope1, intercept1, x1)
     # y2 = get_line_at_x(slope1, intercept1, x2)
     # y3 = get_line_at_x(slope2, intercept2, x3)
@@ -170,14 +202,17 @@ def check_if_lines_cross(line1, line2, x_range_min, x_range_max):
     px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom
     py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom
 
-    if x >= x_range_min and x <= x_range_max:
-        return px, py
+    if px >= x_range_min and px <= x_range_max:
+        return py, px
     else:
         return None
 
 def get_largest_coloured_rectangle(tile_positions, polygon_lines):
 
     areas = []
+
+    compressed_polygen_lines = get_polygon_lines_compressed(tile_positions)
+    print(tile_positions)
 
     # max range of x
     x_range_min = min([tile_positions[i][1] for i in range(len(tile_positions))])
@@ -187,14 +222,19 @@ def get_largest_coloured_rectangle(tile_positions, polygon_lines):
 
     for i in range(len(tile_positions)):
         corner1 = tile_positions[i]
+        if i > 0:
+            break
         for j in range(i+1, len(tile_positions)):
+
+            if j > 1:
+                break
             corner2 = tile_positions[j]
 
             area = make_rectangle(corner1, corner2)
 
             corner3, corner4 = define_rectangle(corner1, corner2)
             print()
-            print(corner1, corner2, corner3, corner4, area)
+            print(corner1, corner2, corner3, corner4, "area", area)
 
             y3, x3 = corner3
             y4, x4 = corner4
@@ -226,22 +266,49 @@ def get_largest_coloured_rectangle(tile_positions, polygon_lines):
                 areas.append([area, corner1, corner2])
 
             # corner 3 to corner 4 is moving in the right direction along x
-            if x4 > x3:
-                interval = 1
-            else:
-                interval = -1
+            # if x4 > x3:
+            #     interval = 1
+            # else:
+            #     interval = -1
+            crossing3_from_left, crossing3_from_right, crossing3_from_corner = [], [], []
+            crossing4_from_left, crossing4_from_right, crossing4_from_corner = [], [], []
+            print("corner3", corner3, y3, x3)
+            print("corner4", corner4, y4, x4)
 
             if not iscorner3_in_polygon_lines:
                 raytracing_intersections = []
                 # draw a line from corner 3 to corner 4 and check if polygon boundary is crossed
-                if x3 != x4:
-                    if interval:
-                        line1 = x3, x4, y3, y4
-                        # line 2 has to be every other line in the polygon 
-                        point = check_if_lines_cross()
+                # line1 = x3, x4, y3, y4
+                line1 = y3, x3, y4, x4
+                # line1 = corner3[0], corner4
+                # line 2 has to be every other line in the polygon 
+                for line2 in compressed_polygen_lines:
+                    # point = check_if_lines_cross(line1, line2, x_range_min, x_range_max)
+                    point = check_if_lines_cross(line1, line2)
+                    # print(area, corner3, corner4,point)
+                    if point is not None:
+                        point = get_point(point)
+                        print("3 crossing line 2", line2, point, "line 1", line1)
+                        areas.append([area, corner1, corner2])
+                        py, px = point
+                        if px < x3:
+                            crossing3_from_left.append(point)
+                        elif px > x3:
+                            crossing3_from_right.append(point)
+                        elif px == x3:
+                            crossing3_from_corner.append(point)
+                # if x3 != x4:
+                #     if interval:
+                #         line1 = x3, x4, y3, y4
+                #         # line 2 has to be every other line in the polygon 
+                #         for line2 in compressed_polygen_lines:
+                #             point = check_if_lines_cross(line1, line2, x_range_min, x_range_max)
+                #             print(point)
+
                     # print("range", [x for x in range(x3, x4 + 1 , interval)])
                     # for x in range(x3, x4 + 1, interval):
-                    #     point = get_point(slope, intercept, x)
+                    #     point = get_line_at_x(slope, intercept, x)
+                    #     point = get_point(point)
                     #     if point in polygon_lines:
                     #         raytracing_intersections.append(point)
                     # # now lets go in the opposite direction and check
@@ -249,14 +316,16 @@ def get_largest_coloured_rectangle(tile_positions, polygon_lines):
                     # if interval > 0:
                     #     print("range left from 3", [x for x in range(x3, x_range_min-1, -1)], x_range_min)
                     #     for x in range(x3, x_range_min+0, -1):
-                    #         point = get_point(slope, intercept, x)
+                    #         point = get_line_at_x(slope, intercept, x)
+                    #         point = get_point(point)
                     #         if point in polygon_lines:
                     #             raytracing_intersections.append(point)
                     # # if the direction to x4 was decreasing in x, go to the right and check up to x range max
                     # else:
                     #     print("range right from 3", [x for x in range(x3, x_range_max + 1, 1)])
                     #     for x in range(x3, x_range_max+1, 1):
-                    #         point = get_point(slope, intercept, x)
+                    #         point = get_line_at_x(slope, intercept, x)
+                    #         point = get_point(point)
                     #         if x == 7:
                     #             print("here", point)
                     #         if point in polygon_lines:
@@ -267,49 +336,74 @@ def get_largest_coloured_rectangle(tile_positions, polygon_lines):
                     # else:
                     #     iscorner3_inside_polygon = True
                     # print(raytracing_intersections)
+            print("corner3", crossing3_from_left, crossing3_from_right, crossing3_from_corner)
 
             if not iscorner4_in_polygon_lines:
                 raytracing_intersections = []
-                if x3 != x4:
-                    print("range", [x for x in range(x4, x3 + 1 , interval)])
-                    for x in (x4, x3 + 1, -interval): # go left if x4 > x3, go right if x4 < x3
-                        point = get_point(slope, intercept, x)
-                        if point in polygon_lines:
-                            raytracing_intersections.append(point)
-                    # now lets go in the opposite direction and check
-                    if interval > 0:
-                        print("range right from 4", [x for x in range(x4, x_range_max + 1, 1)])
-                        for x in range(x4, x_range_max + 1, 1): # go right
-                            point = get_point(slope, intercept, x)
-                            if point in polygon_lines:
-                                raytracing_intersections.append(point)
-                    else:
-                        print("range left from 4", [x for x in range(x4, x_range_min + 1, -1)])
-                        for x in range(x4, x_range_min + 1, 1): # go left
-                            point = get_point(slope, intercept, x)
-                            if point in polygon_lines:
-                                raytracing_intersections.append(point)
-                    print(f"checking c4: crosses polygon boundary: {len(raytracing_intersections)} times")
-                    if len(raytracing_intersections) < 2:
-                        pass
-                    else:
-                        iscorner4_inside_polygon = True
-                    print(raytracing_intersections)
+                line1 = x3, x4, y3, y4
+                # line 2 has to be every other line in the polygon 
+                for line2 in compressed_polygen_lines:
+                    # point = check_if_lines_cross(line1, line2, x_range_min, x_range_max)
+                    point = check_if_lines_cross(line1, line2)
 
-            if iscorner3_inside_polygon and iscorner4_inside_polygon:
-                print("all 4 corners inside or on polygon boundary")
-                print(corner1, corner2, corner3, corner4, 4)
-                areas.append([area, corner1, corner2])
+                    # print(area, corner3, corner4, point)
+                    if point is not None:
+                        point = get_point(point)
+                        print("4 crossing line 2", line2, point, "line 1", line1)
+                        areas.append([area, corner1, corner2])
+                        py, px = point
+                        if px < x4:
+                            crossing4_from_left.append(point)
+                        elif px > x4:
+                            crossing4_from_right.append(point)
+                        elif px == x4:
+                            crossing4_from_corner.append(point)
 
-            else:
-                if not iscorner3_inside_polygon:
-                    print("corner3", corner3, "not inside polygon")
-                if not iscorner4_inside_polygon:
-                    print("corner4", corner4, "not inside polygon")
+            print("corner4", crossing4_from_left, crossing4_from_right, crossing4_from_corner)
+                # if x3 != x4:
+            #         print("range", [x for x in range(x4, x3 + 1 , interval)])
+            #         for x in (x4, x3 + 1, -interval): # go left if x4 > x3, go right if x4 < x3
+            #             point = get_line_at_x(slope, intercept, x)
+            #             point = get_point(point)
+            #             if point in polygon_lines:
+            #                 raytracing_intersections.append(point)
+            #         # now lets go in the opposite direction and check
+            #         if interval > 0:
+            #             print("range right from 4", [x for x in range(x4, x_range_max + 1, 1)])
+            #             for x in range(x4, x_range_max + 1, 1): # go right
+            #                 point = get_line_at_x(slope, intercept, x)
+            #                 point = get_point(point)
+            #                 if point in polygon_lines:
+            #                     raytracing_intersections.append(point)
+            #         else:
+            #             print("range left from 4", [x for x in range(x4, x_range_min + 1, -1)])
+            #             for x in range(x4, x_range_min + 1, 1): # go left
+            #                 point = get_line_at_x(slope, intercept, x)
+            #                 point = get_point(point)
+            #                 if point in polygon_lines:
+            #                     raytracing_intersections.append(point)
+            #         print(f"checking c4: crosses polygon boundary: {len(raytracing_intersections)} times")
+            #         if len(raytracing_intersections) < 2:
+            #             pass
+            #         else:
+            #             iscorner4_inside_polygon = True
+            #         print(raytracing_intersections)
+
+            # if iscorner3_inside_polygon and iscorner4_inside_polygon:
+            #     print("all 4 corners inside or on polygon boundary")
+            #     print(corner1, corner2, corner3, corner4, 4)
+            #     areas.append([area, corner1, corner2])
+
+            # else:
+            #     if not iscorner3_inside_polygon:
+            #         print("corner3", corner3, "not inside polygon")
+            #     if not iscorner4_inside_polygon:
+            #         print("corner4", corner4, "not inside polygon")
+
 
     print("inside areas")
-    for a in areas:
-        print(a)
+    # for a in areas:
+        # print(a)
 
     print(x_range_min, x_range_max)
 
