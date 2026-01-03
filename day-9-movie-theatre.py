@@ -194,7 +194,7 @@ def check_if_lines_cross_new(line1, line2):
             slope = (y2 - y1)/(x2 - x1)
             intercept = y2 - (y2 - y1)/(x2 - x1) * x2
             # where line1 crosses line2 at x3
-            y = get_line_at_x(x3) # where line 1 maybe crosses line 2 at x3 = x4 
+            y = get_line_at_x(slope, intercept, x3) # where line 1 maybe crosses line 2 at x3 = x4 
             if (y_range_min <= y <= y_range_max):
                 return y, x3
 
@@ -233,7 +233,6 @@ def find_largest_rectangle_from_crossing(tile_positions, polygon_lines):
 
     areas_inside = []
 
-
     for a in areas:
         area = a[0]
         corner1 = a[1]
@@ -265,7 +264,89 @@ def find_largest_rectangle_from_crossing(tile_positions, polygon_lines):
         if corner4 in polygon_lines:
             iscorner4_in_polygon_lines, iscorner4_inside_polygon = True, True
 
-        
+        crossing3_from_left, crossing3_from_right, crossing3_from_cornerx = [], [], []
+        crossing3_from_bottom, crossing3_from_top, crossing3_from_cornery = [], [], []
+        crossing4_from_left, crossing4_from_right, crossing4_from_cornerx = [], [], []
+        crossing4_from_bottom, crossing4_from_top, crossing4_from_cornery = [], [], []
+
+        y3, x3 = corner3
+        y4, x4 = corner4
+
+        if not iscorner3_in_polygon_lines:
+            line1 = corner4[0], corner4[1], corner3[0], corner3[1]
+            for line2 in compressed_polygen_lines:
+                point = check_if_lines_cross_new(line1, line2)
+                if point is not None:
+                    py, px = point
+                    if px < x3:
+                        crossing3_from_left.append(point)
+                    elif px > x3:
+                        crossing3_from_right.append(point)
+                    elif px == x3:
+                        crossing3_from_cornerx.append(point)
+                    if py < y3:
+                        crossing3_from_bottom.append(point)
+                    elif py > y3:
+                        crossing3_from_top.append(point)
+                    elif py == y3:
+                        crossing3_from_cornery.append(point)
+
+            if (len(crossing3_from_left) > 0) and (len(crossing3_from_right) > 0):
+                iscorner3_inside_polygon_from_x = True
+            elif (len(crossing3_from_left) > 0) and (len(crossing3_from_cornerx) > 0):
+                iscorner3_inside_polygon_from_x = True
+            elif (len(crossing3_from_right) > 0) and (len(crossing3_from_cornerx) > 0):
+                iscorner3_inside_polygon_from_x = True
+            if (len(crossing3_from_bottom) > 0) and (len(crossing3_from_top) > 0):
+                iscorner3_inside_polygon_from_y = True
+            elif (len(crossing3_from_bottom) > 0) and (len(crossing3_from_cornery) > 0):
+                iscorner3_inside_polygon_from_y = True
+            elif (len(crossing3_from_top) > 0) and (len(crossing3_from_cornery) > 0):
+                iscorner3_inside_polygon_from_y = True
+
+        if not iscorner4_in_polygon_lines:
+            line1 = corner3[0], corner3[1], corner4[0], corner4[1]
+            for line2 in compressed_polygen_lines:
+                point = check_if_lines_cross_new(line1, line2)
+                if point is not None:
+                    py, px = point
+                    if px < x4:
+                        crossing4_from_left.append(point)
+                    elif px > x4:
+                        crossing4_from_right.append(point)
+                    elif px == x4:
+                        crossing4_from_cornerx.append(point)
+                    if py < y4:
+                        crossing4_from_bottom.append(point)
+                    elif py > y4:
+                        crossing4_from_top.append(point)
+                    elif py == y4:
+                        crossing4_from_cornery.append(point)
+
+            if (len(crossing4_from_left) > 0) and (len(crossing4_from_right) > 0):
+                iscorner4_inside_polygon_from_x = True
+            elif (len(crossing4_from_left) > 0) and (len(crossing4_from_cornerx) > 0):
+                iscorner4_inside_polygon_from_x = True
+            elif (len(crossing4_from_right) > 0) and (len(crossing4_from_cornerx) > 0):
+                iscorner4_inside_polygon_from_x = True
+            if (len(crossing4_from_bottom) > 0) and (len(crossing4_from_top) > 0):
+                iscorner4_inside_polygon_from_y = True
+            elif (len(crossing4_from_bottom) > 0) and (len(crossing4_from_cornery) > 0):
+                iscorner4_inside_polygon_from_y = True
+            elif (len(crossing4_from_top) > 0) and (len(crossing4_from_cornery) > 0):
+                iscorner4_inside_polygon_from_y = True
+
+    if iscorner3_inside_polygon_from_x and iscorner3_inside_polygon_from_y:
+        iscorner3_inside_polygon = True
+
+    if iscorner4_inside_polygon_from_x and iscorner4_inside_polygon_from_y:
+        iscorner4_inside_polygon = True
+
+    if iscorner3_inside_polygon and iscorner4_inside_polygon:
+        areas_inside.append(a)
+
+    return areas_inside
+
 
 def find_largest_rectangle_from_ray_casting(tile_positions, polygon_lines):
     areas = get_all_rectangles(tile_positions)
@@ -553,7 +634,12 @@ if __name__ == '__main__':
     assert area_of_largest_rectangle == expected, "wrong area within coloured tiles"
 
     # find_largest_rectangle_inside(tile_positions, polygon_lines)
-    find_largest_rectangle_from_ray_casting(tile_positions, polygon_lines)
+    # find_largest_rectangle_from_ray_casting(tile_positions, polygon_lines)
+
+    areas_inside = find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
+    print(areas_inside)
+    for a in areas_inside:
+        print(a)
 
     filename = "day-9-tiles.txt"
     with open(filename, 'r') as f:
@@ -564,6 +650,7 @@ if __name__ == '__main__':
     tile_positions = parse_inputs(contents)
     largest_rectangle = get_largest_rectangle(tile_positions)
     print("Area of largest rectangle is", largest_rectangle[0])
+
 
     # part 2 - super slow
     polygon_lines = get_boundaries_of_polygon(tile_positions)
