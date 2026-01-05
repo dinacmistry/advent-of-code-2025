@@ -228,15 +228,27 @@ def ray_casting_point_in_polygon(point, polygon_vertices):
 
 
 def find_largest_rectangle_from_crossing(tile_positions, polygon_lines):
-    areas = get_all_rectangles(tile_positions)
+    all_areas = get_all_rectangles(tile_positions)
     compressed_polygen_lines = get_polygon_lines_compressed(tile_positions)
+    # areas = all_areas[int(len(all_areas)/):]
 
     areas_inside = []
 
-    for a in areas:
+    for a in all_areas:
         area = a[0]
         corner1 = a[1]
         corner2 = a[2]
+
+        b = corner1[1]
+        d = corner2[1]
+
+        if not (b == 48440 or d == 48440 or b == 50321 or d == 50321):
+            continue
+            # print(b, d)
+        # print(a)
+
+        if len(areas_inside) > 5:
+            break
 
         corner3, corner4 = define_rectangle(corner1, corner2)
 
@@ -272,55 +284,80 @@ def find_largest_rectangle_from_crossing(tile_positions, polygon_lines):
         y3, x3 = corner3
         y4, x4 = corner4
 
+        # print("area", a, corner3, corner4, corner3 in polygon_lines, corner4 in polygon_lines)
+
         if not iscorner3_in_polygon_lines:
             line1 = corner4[0], corner4[1], corner3[0], corner3[1]
             for line2 in compressed_polygen_lines:
                 point = check_if_lines_cross_new(line1, line2)
                 if point is not None:
+                    point = get_point(point)
+                    # print(area, line1, line2, corner3, corner4, point)
+                    if point in polygon_lines:
+                        print("short cut!", a, corner3, corner4)
+                        iscorner3_inside_polygon = True
+
                     py, px = point
                     if px < x3:
                         crossing3_from_left.append(point)
                     elif px > x3:
                         crossing3_from_right.append(point)
                     elif px == x3:
+                        print("hi x3")
                         crossing3_from_cornerx.append(point)
                     if py < y3:
                         crossing3_from_bottom.append(point)
                     elif py > y3:
                         crossing3_from_top.append(point)
                     elif py == y3:
+                        print("hi y3")
                         crossing3_from_cornery.append(point)
 
             if (len(crossing3_from_left) > 0) and (len(crossing3_from_right) > 0):
-                iscorner3_inside_polygon_from_x = True
+                if (len(crossing3_from_left) == 1) and (len(crossing3_from_right) == 1):
+                    iscorner3_inside_polygon_from_x = True
             elif (len(crossing3_from_left) > 0) and (len(crossing3_from_cornerx) > 0):
-                iscorner3_inside_polygon_from_x = True
+                if (len(crossing3_from_left) == 1) and (len(crossing3_from_right) == 1): 
+                    iscorner3_inside_polygon_from_x = True
             elif (len(crossing3_from_right) > 0) and (len(crossing3_from_cornerx) > 0):
-                iscorner3_inside_polygon_from_x = True
+                if (len(crossing3_from_right) == 1) and (len(crossing3_from_cornerx) == 1):
+                    iscorner3_inside_polygon_from_x = True
+
             if (len(crossing3_from_bottom) > 0) and (len(crossing3_from_top) > 0):
-                iscorner3_inside_polygon_from_y = True
+                if (len(crossing3_from_bottom) == 1) and (len(crossing3_from_top) == 1):
+                    iscorner3_inside_polygon_from_y = True
             elif (len(crossing3_from_bottom) > 0) and (len(crossing3_from_cornery) > 0):
-                iscorner3_inside_polygon_from_y = True
+                if (len(crossing3_from_bottom) == 1) and (len(crossing3_from_cornery) == 1):
+                    iscorner3_inside_polygon_from_y = True  
             elif (len(crossing3_from_top) > 0) and (len(crossing3_from_cornery) > 0):
-                iscorner3_inside_polygon_from_y = True
+                if (len(crossing3_from_top) == 1) and (len(crossing3_from_cornery) == 1):
+                    iscorner3_inside_polygon_from_y = True
 
         if not iscorner4_in_polygon_lines:
             line1 = corner3[0], corner3[1], corner4[0], corner4[1]
             for line2 in compressed_polygen_lines:
                 point = check_if_lines_cross_new(line1, line2)
                 if point is not None:
+                    point = get_point(point)
+                    # print(area, line1, line2, corner3, corner4, point)
+                    if point in polygon_lines:
+                        print("short cut 4!", a, corner3, corner4)
+                        iscorner4_inside_polygon = True
+
                     py, px = point
                     if px < x4:
                         crossing4_from_left.append(point)
                     elif px > x4:
                         crossing4_from_right.append(point)
                     elif px == x4:
+                        print("hi?")
                         crossing4_from_cornerx.append(point)
                     if py < y4:
                         crossing4_from_bottom.append(point)
                     elif py > y4:
                         crossing4_from_top.append(point)
                     elif py == y4:
+                        print("hi y4")
                         crossing4_from_cornery.append(point)
 
             if (len(crossing4_from_left) > 0) and (len(crossing4_from_right) > 0):
@@ -335,15 +372,20 @@ def find_largest_rectangle_from_crossing(tile_positions, polygon_lines):
                 iscorner4_inside_polygon_from_y = True
             elif (len(crossing4_from_top) > 0) and (len(crossing4_from_cornery) > 0):
                 iscorner4_inside_polygon_from_y = True
+        # print(len(crossing3_from_left), len(crossing3_from_right), len(crossing3_from_cornerx), len(crossing3_from_bottom), len(crossing3_from_top), len(crossing3_from_cornery))
+        # print(len(crossing4_from_left), len(crossing4_from_right), len(crossing4_from_cornerx), len(crossing4_from_bottom), len(crossing4_from_top), len(crossing4_from_cornery))
 
-    if iscorner3_inside_polygon_from_x and iscorner3_inside_polygon_from_y:
-        iscorner3_inside_polygon = True
+        if iscorner3_inside_polygon_from_x and iscorner3_inside_polygon_from_y:
+            iscorner3_inside_polygon = True
 
-    if iscorner4_inside_polygon_from_x and iscorner4_inside_polygon_from_y:
-        iscorner4_inside_polygon = True
+        if iscorner4_inside_polygon_from_x and iscorner4_inside_polygon_from_y:
+            iscorner4_inside_polygon = True
 
-    if iscorner3_inside_polygon and iscorner4_inside_polygon:
-        areas_inside.append(a)
+        if iscorner3_inside_polygon and iscorner4_inside_polygon:
+            areas_inside.append(a)
+
+    for a in areas_inside:
+        print("inside", a)
 
     return areas_inside
 
@@ -527,6 +569,7 @@ def get_rectangles_inside(tile_positions, polygon_lines):
 
         for j in range(i + 1, len(tile_positions)):
             corner2 = tile_positions[j]
+
             area = make_rectangle(corner1, corner2)
             corner3, corner4 = define_rectangle(corner1, corner2)
 
@@ -637,7 +680,6 @@ if __name__ == '__main__':
     # find_largest_rectangle_from_ray_casting(tile_positions, polygon_lines)
 
     areas_inside = find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
-    print(areas_inside)
     for a in areas_inside:
         print(a)
 
@@ -648,16 +690,60 @@ if __name__ == '__main__':
 
     # part 1
     tile_positions = parse_inputs(contents)
+    polygon_lines = get_boundaries_of_polygon(tile_positions)
     largest_rectangle = get_largest_rectangle(tile_positions)
     print("Area of largest rectangle is", largest_rectangle[0])
 
 
     # part 2 - super slow
-    polygon_lines = get_boundaries_of_polygon(tile_positions)
+    # polygon_lines = get_boundaries_of_polygon(tile_positions)
     # rectangles_inside = get_rectangles_inside(tile_positions, polygon_lines)
     # area_of_largest_rectangle = get_largest_rectangle_inside(rectangles_inside)
     # print("Area of largest rectangle", area_of_largest_rectangle)
     # find_largest_rectangle_inside(tile_positions, polygon_lines)
     # find_largest_rectangle_from_ray_casting(tile_positions, polygon_lines)
+    # find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
+
+
+    # filename = "day-9-tiles-1.txt"
+    # with open(filename, 'r') as f:
+    #     contents = f.read()
+    # f.close()
+
+    # # part 1
+    # tile_positions = parse_inputs(contents)
+    # polygon_lines = get_boundaries_of_polygon(tile_positions)
+
+    # areas_inside = find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
+
+    # top half
+    print("\nPart 1")
+    filename = "day-9-tiles-1.txt"
+    with open(filename, 'r') as f:
+        contents = f.read()
+    f.close()
+
+    tile_positions = parse_inputs(contents)
+    polygon_lines = get_boundaries_of_polygon(tile_positions)
+    largest_rectangle = get_largest_rectangle(tile_positions)
+
+    find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
+
+
+
+    # bottom half
+    print("\nPart 2")
+    filename = "day-9-tiles-2.txt"
+    with open(filename, 'r') as f:
+        contents = f.read()
+    f.close()
+
+    tile_positions = parse_inputs(contents)
+    polygon_lines = get_boundaries_of_polygon(tile_positions)
+    largest_rectangle = get_largest_rectangle(tile_positions)
+
+    find_largest_rectangle_from_crossing(tile_positions, polygon_lines)
+
+
 
 
