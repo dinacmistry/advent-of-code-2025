@@ -58,7 +58,7 @@ def ways_to_turn_on_lights(final_light_rack, button_set):
 
     press_button(initial_numerical_light_rack, button_set[0])
 
-    num_button_range = np.arange(2, 9)
+    num_button_range = np.arange(0, 9)
 
     ways_that_work = []
 
@@ -68,28 +68,27 @@ def ways_to_turn_on_lights(final_light_rack, button_set):
         ways = ways_to_press_buttons(button_set, num_buttons)
 
         for way in ways:
-            # print("way", way)
             combined_buttons = combine_buttons(way)
-            # print("combined_buttons", combined_buttons)
             candidate_numerical_light_rack = press_button(initial_numerical_light_rack, combined_buttons)
             if np.array_equal(candidate_numerical_light_rack, final_numerical_light_rack):
-                # print("same!")
                 ways_that_work.append(way)
         if len(ways_that_work) > 0:
             number_minimum_buttons_found = True
         if number_minimum_buttons_found:
             break
 
-    print("\nways that work")
-    print(ways_that_work)
+    # print("\nways that work")
+    # print(ways_that_work)
+    # for way in ways_that_work:
+    #     print(way)
     all_same_length = [ len(ways_that_work[0]) == len(way) for way in ways_that_work]
     if False in all_same_length:
         print("STOP")
 
-    if len(ways_that_work) > 0:
-        print("number of ways to press buttons found")
-    else:
-        print("number of ways to press buttons not found!")
+    # if len(ways_that_work) > 0:
+    #     print("number of ways to press buttons found")
+    # else:
+    #     print("number of ways to press buttons not found!")
 
     return ways_that_work
 
@@ -102,15 +101,13 @@ def get_minimum_number_of_button_presses(final_lights, buttons):
         minimum_ways_for_light_rack = ways_to_turn_on_lights(final_lights[n], buttons[n])
         minimum_buttons_to_press_for_light_rack = len(minimum_ways_for_light_rack[0])
         minimum_buttons_to_press_for_all_lights += minimum_buttons_to_press_for_light_rack
-        print("light", n)
-        print(buttons[n])
-        print(minimum_buttons_to_press_for_light_rack)
+        # print("light", n)
+        # print(buttons[n])
+        # print(minimum_buttons_to_press_for_light_rack)
         minimum_button_lengths.append(len(minimum_ways_for_light_rack[0]))
-        # if n > 3:
-            # break
 
-    print(minimum_button_lengths)
-    print(sum(minimum_button_lengths))
+    # print(minimum_button_lengths)
+    # print(sum(minimum_button_lengths))
     return minimum_buttons_to_press_for_all_lights
 
 
